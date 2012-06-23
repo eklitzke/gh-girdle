@@ -130,7 +130,7 @@
                         var $event_count = '<span class="girdle_event_count"></span>';
                         $title.append($event_count);
 
-                        var $events = $('<div style="height: 26px"></div>')
+                        var $events = $('<div></div>')
                         $body.append($events);
 
                         $body.append($body_alerts);
@@ -179,6 +179,7 @@
                         });
 
                         $title.append($expand);
+                        $title.append($('<div style="clear: both"></div>'));
 
                         $('.news').prepend($gh_alert);
                     }
