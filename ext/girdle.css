@@ -1,5 +1,28 @@
+.button { cursor: pointer; }
+
+.girdle_hidden {
+  /*height: 0px;*/
+  overflow: hidden;
+};
+
 .girdle_right { float: right; }
 
 .girdle_icon { position: relative;
                margin-right: 5px;
-               margin-top: 5px}
+               margin-top: 5px; }
+
+.slidedown {
+  animation-duration: 1s;
+  animation-name: slidedown;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-name: slide;
+}
+
+@-webkit-keyframes slide {
+  from {
+    padding-left: 20px;
+  }
+  to {
+    padding-left: 0px;
+  }
+}
