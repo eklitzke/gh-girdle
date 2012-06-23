@@ -159,19 +159,14 @@
                             if (!isExpand) {
                                 ruleName = 'reverse-' + ruleName;
                             }
-                            console.info('ruleName is ' + ruleName);
 
                             //$body_alerts[0].className =
                             //$body_alerts[0].className + " " +
                             //ruleName;
                             $body_alerts.addClass(ruleName);
                             console.log($body_alerts);
-                            $body_alerts.one('webkitAnimationStart', function() {
-                                console.info('start animation');
-                            });
                             $body_alerts.one('webkitAnimationEnd', function() {
                                 $body_alerts.removeClass(ruleName)
-                                console.info('end animation');
                                 if (isExpand) {
                                     $body_alerts.height($body_alerts._girdle_height);
                                 } else {

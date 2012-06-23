@@ -5,6 +5,8 @@
   overflow: hidden;
 };
 
+.button .girdle_hidden { margin-left: 1em; }
+
 .girdle_right { float: right; }
 
 .girdle_icon { position: relative;
