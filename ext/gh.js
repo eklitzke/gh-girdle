@@ -153,7 +153,6 @@
                                 }
                                 $expand.text('compress');
                             } else {
-                                $body.append($events);
                                 $expand.text('expand');
                             }
                             var ruleName = createAnimation($body_alerts);
@@ -172,6 +171,7 @@
                                     $body_alerts.height($body_alerts._girdle_height);
                                 } else {
                                     $body_alerts.height(0);
+                                    $body.append($events);
                                 }
                             });
                         });
