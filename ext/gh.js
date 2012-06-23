@@ -107,8 +107,8 @@
             for (kk in compressed) {
                 (function(k) {
                     if (containers[k]) {
-                        $second_title = $('.title:eq(1)', containers[k]);
-                        $second_title.empty();
+                        $events = $('.title:eq(1)', containers[k]);
+                        $events.empty();
                     } else {
                         var $gh_alert = $('<div class="alert"></div>');
                         $gh_alert.data("girdled", k);
@@ -123,7 +123,6 @@
                         var $title = $(title);
 
                         $body.append($title);
-                        $body.append($body_alerts);
 
                         var $name = $('<a href="' + k + '">' + k + '</a>');
 
@@ -131,8 +130,10 @@
                         var $event_count = '<span class="girdle_event_count"></span>';
                         $title.append($event_count);
 
-                        var $second_title = $(title);
-                        $body.append($second_title);
+                        var $events = $('<div style="height: 26px"></div>')
+                        $body.append($events);
+
+                        $body.append($body_alerts);
 
                         var $expand = $('<a id="' + k + '" class="button girdle_right">expand</a>');
 
@@ -146,13 +147,13 @@
                                 });
                             }
                             if (isExpand) {
-                                $second_title.remove();
+                                $events.remove();
                                 if (!$body_alerts.hasOwnProperty('_girdle_height')) {
                                     $body_alerts._girdle_height = $body_alerts.height();
                                 }
                                 $expand.text('compress');
                             } else {
-                                $body.append($second_title);
+                                $body.append($events);
                                 $expand.text('expand');
                             }
                             var ruleName = createAnimation($body_alerts);
@@ -173,7 +174,6 @@
                                     $body_alerts.height(0);
                                 }
                             });
-//                            $body.style.webKitAnimationName = 'slidedown';
                         });
 
                         $title.append($expand);
@@ -190,9 +190,9 @@
 
                     $(compressed[k]).each(function(i, value) {
                         var $icon = $('.mini-icon', value).clone();
-                        $icon.add('.girdle_icon')
+                        $icon.css({'position': 'relative', 'margin-right': '5px', 'margin-top': '5px'});
                         $icon.attr('title', $.trim($('.title', value).text()));
-                        $second_title.append($icon);
+                        $events.append($icon);
                     });
                 })(kk);
             }
