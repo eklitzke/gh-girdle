@@ -151,9 +151,8 @@
                                 if (!$body_alerts.hasOwnProperty('_girdle_height')) {
                                     $body_alerts._girdle_height = $body_alerts.height();
                                 }
-                                $expand.text('compress');
                             } else {
-                                $expand.text('expand');
+                                $body.append($events);
                             }
                             var ruleName = createAnimation($body_alerts);
                             if (!isExpand) {
@@ -168,10 +167,13 @@
                             $body_alerts.one('webkitAnimationEnd', function() {
                                 $body_alerts.removeClass(ruleName)
                                 if (isExpand) {
-                                    $body_alerts.height($body_alerts._girdle_height);
+                                    if ($body_alerts.height !== $body_alerts._girdle_height) {
+                                        $body_alerts.height($body_alerts._girdle_height);
+                                    }
+                                    $expand.text('compress');
                                 } else {
                                     $body_alerts.height(0);
-                                    $body.append($events);
+                                    $expand.text('expand');
                                 }
                             });
                         });
