@@ -4,6 +4,7 @@
     "content_scripts": [
         {
             "matches": ["https://github.com/"],
+            "css": ["girdle.css"],
             "js": ["jquery.min.js", "gh.js"]
         }
     ]

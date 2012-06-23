@@ -5,11 +5,11 @@
 // @require        http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
 // ==/UserScript==
 
-function gh_news() {
+(function() {
     var compressed = {};
     var containers = {};
 
-    function engirdle() {
+    var engirdle = function () {
         $('.news').each(function(index) {
             $('.alert', this).each(function(index) {
                 if ($(this).data("girdled")) {
@@ -40,16 +40,16 @@ function gh_news() {
                     }
                     repo = $(key).text();
                 } else if (alert_type == 'alert issues_opened' ||
-                    alert_type == 'alert issues_closed' ||
-                    alert_type == 'alert issues_reopened') {
+                           alert_type == 'alert issues_closed' ||
+                           alert_type == 'alert issues_reopened') {
                     repo = $($(title_elems).get(2)).text();
                 } else if (alert_type == 'alert push' ||
-                    alert_type == 'alert commit_comment' ||
-                    alert_type == 'alert download' ||
-                    alert_type == 'alert delete' ||
-                    alert_type == 'alert gollum' ||
-                    alert_type == 'alert fork' ||
-                    alert_type == 'alert watch_started') {
+                           alert_type == 'alert commit_comment' ||
+                           alert_type == 'alert download' ||
+                           alert_type == 'alert delete' ||
+                           alert_type == 'alert gollum' ||
+                           alert_type == 'alert fork' ||
+                           alert_type == 'alert watch_started') {
                     repo = $($(title_elems).get(1)).text();
                 } else if (alert_type == 'alert issues_comment') {
                     var repo_elem = $(title_elems).get(2);
@@ -97,8 +97,7 @@ function gh_news() {
                         var $second_title = $(title);
                         $body.append($second_title);
 
-                        var $expand = $('<a id="' + k + '" class="button">expand</a>');
-                        $expand.css('float', 'right');
+                        var $expand = $('<a id="' + k + '" class="button girdle_right">expand</a>');
 
                         $expand.click(function() {
                             var t = $expand.text();
@@ -132,7 +131,7 @@ function gh_news() {
 
                     $(compressed[k]).each(function(i, value) {
                         var $icon = $('.mini-icon', value).clone();
-                        $icon.css({'position': 'relative', 'margin-right': '5px', 'margin-top': '5px'});
+                        $icon.add('.girdle_icon')
                         $icon.attr('title', $.trim($('.title', value).text()));
                         $second_title.append($icon);
                     });
@@ -143,24 +142,9 @@ function gh_news() {
 
     engirdle();
 
-    //Intercept the pageUpdate function and have it call engirdle
-    var pageUpdate = $.fn.pageUpdate;
+    // Intercept the pageUpdate function and have it call engirdle
     $.fn.pageUpdate = function (a) {
         pageUpdate.call(this, a);
         engirdle();
     }
-}
-
-function inject(func) {
-    var text, el;
-
-    el = document.createElement("script");
-    el.setAttribute("type", "text/javascript");
-
-    text = document.createTextNode('('+func+')()');
-    el.appendChild(text);
-
-    return document.body.appendChild(el);
-}
-
-inject(gh_news);
+})()
