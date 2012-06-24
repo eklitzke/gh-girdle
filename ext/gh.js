@@ -5,17 +5,117 @@
 // @require        http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
 // ==/UserScript==
 
-function gh_news() {
+(function() {
+    /* Create a CSS tag with the styles that we plan to use; we do
+     * this rather than using a real CSS file for portability to Safari
+     * and Firefox.
+     */
+
+    var head_ = document.getElementsByTagName('head')[0];
+    var createCSS = (function (arr) {
+        var css = document.createElement('style');
+        css.type = 'text/css';
+        var reified = '';
+        for (var i = 0; i < arr.length; i++) {
+            reified += arr[i] + '\n';
+        }
+        css.appendChild(document.createTextNode(reified));
+        head_.appendChild(css);
+    });
+
+    createCSS([
+        '.button { cursor: pointer; }',
+        '',
+        '.girdle_hidden { overflow: hidden; }',
+        '',
+        '.button .girdle_hidden { margin-left: 1em; }',
+        '',
+        '.girdle_right { float: right; }'])
+
+    /* This is a hack to create an animation rule for animating an
+     * element of a given height. This is the only way I (eklitzke)
+     * could get this to work properly. It's kind of hacky because it
+     * creates up to N rules where N is the number of elements with
+     * unique sizes that are expanded. However, the number of events
+     * on the page shouldn't be too large (a dozen or two at the
+     * most), and the sizes are cached which makes this a little less
+     * hacky.
+     */
+    var animations_ = {};
+
+    var createAnimation = (function($elem) {
+        var height = $elem._girdle_height;
+        if (animations_.hasOwnProperty(height)) {
+            return animations_[height];
+        }
+        var ruleName = 'slider' + height;
+        /* N.B. As of Firefox 13, reverse animations are not
+         * supported, so we need extra rules for Firefox.
+         */
+        createCSS([
+            '.' + ruleName + ' {',
+            '  animation-name: anim' + ruleName + ';',
+            '  animation-duration: 0.5s;',
+            '  -moz-animation-name: anim' + ruleName + ';',
+            '  -moz-animation-duration: 0.5s;',
+            '  -webkit-animation-name: anim' + ruleName + ';',
+            '  -webkit-animation-duration: 0.5s;',
+            '}',
+            '',
+            '.reverse-' + ruleName + ' {',
+            '  animation-name: reverseAnim' + ruleName + ';',
+            '  animation-duration: 0.5s;',
+            '  -moz-animation-name: reverseAnim' + ruleName + ';',
+            '  -moz-animation-duration: 0.5s;',
+            '  -webkit-animation-name: anim' + ruleName + ';',
+            '  -webkit-animation-duration: 0.5s;',
+            '  -webkit-animation-direction: reverse',
+            '}',
+            '',
+            '@keyframes anim' + ruleName + ' {',
+            '  from { height: 0px; }',
+            '  to { height: ' + height + 'px; }',
+            '}',
+            '',
+            '@-moz-keyframes anim' + ruleName + ' {',
+            '  from { height: 0px; }',
+            '  to { height: ' + height + 'px; }',
+            '}',
+            '',
+            '@-webkit-keyframes anim' + ruleName + ' {',
+            '  from { height: 0px; }',
+            '  to { height: ' + height + 'px; }',
+            '}',
+            '',
+            '@keyframes reverseAnim' + ruleName + ' {',
+            '  from { height: ' + height + 'px; }',
+            '  to { height: 0px; }',
+            '}',
+            '',
+            '@-moz-keyframes reverseAnim' + ruleName + ' {',
+            '  from { height: ' + height + 'px; }',
+            '  to { height: 0px }',
+            '}',
+        ]);
+        animations_[height] = ruleName;
+        return ruleName;
+    });
+
     var compressed = {};
     var containers = {};
 
-    function engirdle() {
+    var engirdle = function () {
+        var addAlert = function(type) {return 'alert ' + type;};
+        var issueAlerts = ['issues_opened','issues_closed',
+                           'issues_reopened'].map(addAlert);
+        var otherAlerts = ['push', 'commit_comment', 'download', 'delete',
+                           'gollum', 'fork', 'watch_started'].map(addAlert);
         $('.news').each(function(index) {
             $('.alert', this).each(function(index) {
                 if ($(this).data("girdled")) {
                     return;
                 }
-                var alert_type = $(this).attr('class')
+                var alertType = $(this).attr('class')
                 var title_elems = $('.title', this).find('a')
 
                 // grab the user
@@ -23,45 +123,40 @@ function gh_news() {
 
                 var repo = '';
 
-                // don't handle git_hub for now.
-                if (alert_type == 'alert create') {
+                // don't handle git_hub fonow.
+                if (alertType === 'alert create') {
                     var key = $(title_elems).get(2);
-                    if (key == undefined) {
+                    if (key === undefined) {
                         key = $(title_elems).get(0);
                     }
                     repo = $(key).text();
-                } else if (alert_type == 'alert gist') {
+                } else if (alertType === 'alert gist') {
                     var key = $(title_elems).get(0);
                     repo = $(key).text();
-                } else if (alert_type == 'alert follow') {
+                } else if (alertType === 'alert follow') {
                     var key = $(title_elems).get(1);
                     if ($(key).text() != user) {
                         key = $(title_elems).get(0);
                     }
                     repo = $(key).text();
-                } else if (alert_type == 'alert issues_opened' ||
-                    alert_type == 'alert issues_closed' ||
-                    alert_type == 'alert issues_reopened') {
+                } else if (issueAlerts.indexOf(alertType) >= 0) {
                     repo = $($(title_elems).get(2)).text();
-                } else if (alert_type == 'alert push' ||
-                    alert_type == 'alert commit_comment' ||
-                    alert_type == 'alert download' ||
-                    alert_type == 'alert delete' ||
-                    alert_type == 'alert gollum' ||
-                    alert_type == 'alert fork' ||
-                    alert_type == 'alert watch_started') {
+                } else if (otherAlerts.indexOf(alertType) >= 0) {
                     repo = $($(title_elems).get(1)).text();
-                } else if (alert_type == 'alert issues_comment') {
+                } else if (alertType === 'alert issues_comment') {
                     var repo_elem = $(title_elems).get(2);
-                    if (repo_elem == undefined) {
+                    if (repo_elem === undefined) {
                         // comment on a repo
                         repo_elem = $(title_elems).get(1);
                     }
                     repo = $(repo_elem).text();
                 } else {
-                    console.log('unknown: ' + alert_type);
+                    console.log('unknown: ' + alertType);
                     repo = 'unknown';
                 }
+
+                // Add the data to the compressed dictionary, and
+                // remove the elements from the page.
                 if (!compressed[repo]) {
                     compressed[repo] = [];
                 }
@@ -72,14 +167,15 @@ function gh_news() {
             for (kk in compressed) {
                 (function(k) {
                     if (containers[k]) {
-                        $second_title = $('.title:eq(1)', containers[k]);
-                        $second_title.empty();
+                        $events = $('.title:eq(1)', containers[k]);
+                        $events.empty();
                     } else {
                         var $gh_alert = $('<div class="alert"></div>');
                         $gh_alert.data("girdled", k);
                         containers[k] = $gh_alert;
 
                         var $body = $('<div class="body"></div>');
+                        var $body_alerts = $('<div class="girdle_hidden"></div>');
 
                         $gh_alert.append($body);
 
@@ -94,31 +190,51 @@ function gh_news() {
                         var $event_count = '<span class="girdle_event_count"></span>';
                         $title.append($event_count);
 
-                        var $second_title = $(title);
-                        $body.append($second_title);
+                        var $events = $('<div></div>')
+                        $body.append($events);
 
-                        var $expand = $('<a id="' + k + '" class="button">expand</a>');
-                        $expand.css('float', 'right');
+                        $body.append($body_alerts);
+
+                        var $expand = $('<a id="' + k + '" class="button girdle_right">expand</a>');
 
                         $expand.click(function() {
                             var t = $expand.text();
-                            $(compressed[k]).each(function(i, value) {
-                                if (t == 'expand') {
-                                    $(value).appendTo($body);
+                            var isExpand = (t === "expand");
+                            if ($body_alerts.children().length == 0) {
+                                $(compressed[k]).each(function(i, value) {
+                                    $(value).appendTo($body_alerts);
+                                });
+                            }
+                            if (isExpand) {
+                                $events.remove();
+                                if (!$body_alerts.hasOwnProperty('_girdle_height')) {
+                                    $body_alerts._girdle_height = $body_alerts.height();
+                                }
+                            } else {
+                                $body.append($events);
+                            }
+                            var ruleName = createAnimation($body_alerts);
+                            if (!isExpand) {
+                                ruleName = 'reverse-' + ruleName;
+                            }
+
+                            $body_alerts.addClass(ruleName);
+                            $body_alerts.one('animationend mozAnimationEnd webkitAnimationEnd', function() {
+                                $body_alerts.removeClass(ruleName)
+                                if (isExpand) {
+                                    if ($body_alerts.height !== $body_alerts._girdle_height) {
+                                        $body_alerts.height($body_alerts._girdle_height);
+                                    }
+                                    $expand.text('compress');
                                 } else {
-                                    $(value).remove()
+                                    $body_alerts.height(0);
+                                    $expand.text('expand');
                                 }
                             });
-                            if (t == 'expand') {
-                                $second_title.remove();
-                                $expand.text('compress');
-                            } else {
-                                $body.append($second_title);
-                                $expand.text('expand');
-                            }
                         });
 
                         $title.append($expand);
+                        $title.append($('<div style="clear: both"></div>'));
 
                         $('.news').prepend($gh_alert);
                     }
@@ -134,7 +250,7 @@ function gh_news() {
                         var $icon = $('.mini-icon', value).clone();
                         $icon.css({'position': 'relative', 'margin-right': '5px', 'margin-top': '5px'});
                         $icon.attr('title', $.trim($('.title', value).text()));
-                        $second_title.append($icon);
+                        $events.append($icon);
                     });
                 })(kk);
             }
@@ -143,24 +259,9 @@ function gh_news() {
 
     engirdle();
 
-    //Intercept the pageUpdate function and have it call engirdle
-    var pageUpdate = $.fn.pageUpdate;
+    // Intercept the pageUpdate function and have it call engirdle
     $.fn.pageUpdate = function (a) {
         pageUpdate.call(this, a);
         engirdle();
     }
-}
-
-function inject(func) {
-    var text, el;
-
-    el = document.createElement("script");
-    el.setAttribute("type", "text/javascript");
-
-    text = document.createTextNode('('+func+')()');
-    el.appendChild(text);
-
-    return document.body.appendChild(el);
-}
-
-inject(gh_news);
+})()
